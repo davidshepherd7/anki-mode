@@ -22,12 +22,13 @@
 
 
 (defvar anki-mode-card-type nil
-  "Buffer local variable containing the current card type"
-  :group anki-mode)
+  "Buffer local variable containing the current card type")
 
-(defvar anki-mode--card-types '("Basic" "Cloze" "Basic (and reversed card)")
-  "TODO: remove"
-  :group anki-mode)
+
+(defvar anki-mode--card-types '(("Basic" ("Front" "Back"))
+                       ("Cloze" ())
+                       ("Basic (and reversed card)" ("Front" "Back")))
+  "TODO: get from anki")
 
 
 
@@ -57,12 +58,17 @@
 ;;;###autoload
 (defun anki-mode-new-card ()
   (interactive)
-  (find-file (make-temp-file "anki-card-"))
-  (anki-mode)
+  (let ((previous-card-type anki-mode-card-type))
+    (find-file (make-temp-file "anki-card-"))
+    (anki-mode)
+    (setq-local anki-mode-card-type
+                (or previous-card-type
+                    (completing-read "Choose card type: "
+                                     (-map #'car anki-mode--card-types))))
 
-  (insert "@Front\n\n")
-  (insert "@Back\n")
-  (forward-line -2))
+    (insert "@Front\n\n")
+    (insert "@Back\n")
+    (forward-line -2)))
 
 (defun anki-mode-send-new-card ()
   (interactive)
