@@ -11,7 +11,7 @@ clean :
 	@rm -f *.elc
 
 test: build
-	./test.sh
+	cask exec ert-runner
 
 install:
 	${CASK} install

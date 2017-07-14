@@ -20,6 +20,12 @@
 (require 'dash)
 (require 's)
 (require 'request)
+(require 'json)
+
+(eval-when-compile
+  (require 'cl))
+
+
 
 (defvar anki-mode--required-anki-connect-version 2
   "Version of the anki connect plugin required")
@@ -89,13 +95,13 @@
                            (message "Warning: anki-mode-connect got null data, this probably means a bad query was sent")
                          (funcall callback data))))))
 
-(defun anki-mode--compare-version (version)
+(defun anki-mode-check-version ()
+  (interactive)
+  (anki-mode-connect #'anki-mode--check-version-cb "version" nil t))
+(defun anki-mode--check-version-cb (version)
   (when (not (= version anki-mode--required-anki-connect-version))
     (message "Warning you have anik connect version %S installed, but %S is required"
              version anki-mode--required-anki-connect-version)))
-(defun anki-mode-check-version ()
-  (interactive)
-  (anki-mode-connect #'anki-mode--compare-version "version" nil t))
 
 (defun anki-mode-update-decks ()
   (interactive)
