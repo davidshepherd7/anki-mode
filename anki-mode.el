@@ -4,7 +4,7 @@
 
 ;; Author: David Shepherd <davidshepherd7@gmail.com>
 ;; Version: 0.1
-;; Package-Requires: ((emacs "24") (dash "2.12.0") (markdown-mode "2.2") (s "1.11.0"))
+;; Package-Requires: ((emacs "24") (dash "2.12.0") (markdown-mode "2.2") (s "1.11.0") (request "0.3.0"))
 ;; Keywords: TODO
 ;; URL: https://github.com/davidshepherd7/anki-mode
 
@@ -19,7 +19,13 @@
 (require 'markdown-mode)
 (require 'dash)
 (require 's)
+(require 'request)
 
+(defvar anki-mode--required-anki-connect-version 2
+  "Version of the anki connect plugin required")
+
+(defvar anki-mode-decks '()
+  "List of anki deck names. Update with `'anki-mode-update-decks'")
 
 (defvar anki-mode-card-type nil
   "Buffer local variable containing the current card type")
@@ -69,6 +75,32 @@
     (insert "@Front\n\n")
     (insert "@Back\n")
     (forward-line -2)))
+
+(defun anki-mode-connect (callback method params sync)
+  (request "http://localhost:8765"
+           :type "POST"
+           :data (json-encode `(("action" . ,method) ("params" . ,params)))
+           :headers '(("Content-Type" . "application/json"))
+           :parser 'json-read
+           :sync sync
+           :success (function*
+                     (lambda (&key data &allow-other-keys)
+                       (if (not data)
+                           (message "Warning: anki-mode-connect got null data, this probably means a bad query was sent")
+                         (funcall callback data))))))
+
+(defun anki-mode--compare-version (version)
+  (when (not (= version anki-mode--required-anki-connect-version))
+    (message "Warning you have anik connect version %S installed, but %S is required"
+             version anki-mode--required-anki-connect-version)))
+(defun anki-mode-check-version ()
+  (interactive)
+  (anki-mode-connect #'anki-mode--compare-version "version" nil t))
+
+(defun anki-mode-update-decks ()
+  (interactive)
+  (anki-mode-connect (lambda (decks) (setq anki-mode-decks decks)) "deckNames" nil t))
+
 
 (defun anki-mode-send-new-card ()
   (interactive)
