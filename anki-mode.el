@@ -33,9 +33,9 @@
 (defvar anki-mode-decks '()
   "List of anki deck names. Update with `'anki-mode-update-decks'")
 
-(defvar anki-mode--card-types '(("Basic" ("Front" "Back"))
-                       ("Cloze" ())
-                       ("Basic (and reversed card)" ("Front" "Back")))
+(defvar anki-mode--card-types '(("Basic" . ("Front" "Back"))
+                       ("Cloze" . ())
+                       ("Basic (and reversed card)" . ("Front" "Back")))
   "TODO: get from anki")
 
 
@@ -73,22 +73,36 @@ to default to the one used by markdown mode if it is set."
   (insert "[$][/$]")
   (forward-char -4))
 
-
-
 ;;;###autoload
 (defun anki-mode-new-card ()
   (interactive)
-  (let ((previous-card-type anki-mode-card-type))
+  (let ((previous-card-type anki-mode-card-type)
+        (previous-deck anki-mode-deck))
+
     (find-file (make-temp-file "anki-card-"))
     (anki-mode)
+
+    (setq-local anki-mode-deck
+                (or previous-deck
+                    (completing-read "Choose deck: " anki-mode-decks)))
     (setq-local anki-mode-card-type
                 (or previous-card-type
                     (completing-read "Choose card type: "
                                      (-map #'car anki-mode--card-types))))
 
-    (insert "@Front\n\n")
-    (insert "@Back\n")
-    (forward-line -2)))
+    (let ((card-fields (assoc anki-mode-card-type anki-mode--card-types)))
+      (unless card-fields
+        (error "Unrecognised card type: \"%s\"" anki-mode-card-type))
+      (-each (cdr card-fields)
+        (lambda (field)
+          (insert (s-concat "@" field "\n\n")))))
+
+    (goto-char (point-min))
+    (forward-line 1)))
+
+
+
+;;; Anki-connect helpers
 
 (defun anki-mode-connect (callback method params sync)
   (request "http://localhost:8765"

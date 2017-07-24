@@ -55,3 +55,44 @@
                                        ("back" . "some more buffer text"))))
 
         (anki-mode-send-new-card)))))
+
+
+(ert-deftest test-new-card ()
+  (let ((anki-mode--decks '("Default" "MOCK read"))
+        (anki-mode--card-types '(("Basic" . ("Front" "Back"))
+                                 ("Cloze" . ())
+                                 ("Basic (and reversed card)" . ("Front" "Back"))
+                                 ("MOCK read" . ("foo" "bar")))))
+
+    ;; current card/deck is used
+    (with-temp-buffer
+      (insert "old card")
+      (setq-local anki-mode-deck "Default")
+      (setq-local anki-mode-card-type "Basic")
+
+      (anki-mode-new-card)
+
+      (should (s-matches? "anki-card-.*" (buffer-name)))
+      (should (derived-mode-p 'anki-mode))
+
+      (should (s-equals? anki-mode-deck "Default"))
+      (should (s-equals? anki-mode-card-type "Basic"))
+
+      (should (s-matches? "^@Front" (buffer-string)))
+      (should (s-matches? "^@Back" (buffer-string))))
+
+
+    ;; no current card/deck
+    (with-mock
+      (mock (completing-read * *) => "MOCK read" :times 2)
+
+      (anki-mode-new-card)
+      (should (s-matches? "anki-card-.*" (buffer-name)))
+      (should (derived-mode-p 'anki-mode))
+
+      (should (s-equals? anki-mode-deck "MOCK read"))
+      (should (s-equals? anki-mode-card-type "MOCK read"))
+
+      (should (s-matches? "^@foo" (buffer-string)))
+      (should (s-matches? "^@bar" (buffer-string))))
+    ))
