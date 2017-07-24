@@ -42,19 +42,19 @@
                        ("Basic (and reversed card)" ("Front" "Back")))
   "TODO: get from anki")
 
+
+
+(defcustom anki-mode-markdown-command (or markdown-command "markdown")
+  "Markdown command to run to convert markdown to html. Attempts
+to default to the one used by markdown mode if it is set."
+  :group 'anki-mode)
 
 
 
-(define-derived-mode anki-mode markdown-mode
-  "Anki")
+(define-derived-mode anki-mode markdown-mode "Anki")
 
 (define-key anki-mode-map (kbd "C-c C-c") #'anki-mode-send-and-new-card)
 (define-key anki-mode-map (kbd "$") #'anki-mode-insert-latex-math)
-
-;; (defun anki-mode-set-card-type ()
-;;   (interactive)
-;;   ()
-;;   )
 
 (defun anki-mode-send-and-new-card ()
   (interactive)
@@ -82,6 +82,13 @@
     (insert "@Back\n")
     (forward-line -2)))
 
+(defun anki-mode-markdown (string)
+  (interactive)
+  (with-temp-buffer
+    (insert string)
+    (shell-command-on-region (point-min) (point-max) anki-mode-markdown-command (buffer-name))
+    (s-trim (buffer-string))))
+
 (defun anki-mode-connect (callback method params sync)
   (request "http://localhost:8765"
            :type "POST"
@@ -105,7 +112,18 @@
 
 (defun anki-mode-update-decks ()
   (interactive)
-  (anki-mode-connect (lambda (decks) (setq anki-mode-decks decks)) "deckNames" nil t))
+  (anki-mode-connect #'anki-mode--update-decks-cb "deckNames" nil t))
+(defun anki-mode--update-decks-cb (decks)
+  (setq anki-mode-decks decks))
+
+
+(defun anki-mode-create-card (deck model fields)
+  (let ((md-fields (-map (lambda (pair) (cons (car pair) (anki-mode-markdown (cdr pair)))) fields)))
+    (anki-mode-connect #'anki-mode--create-card-cb "addNotes" `((deckName . ,deck)
+                                              (modelName . ,model)
+                                              (fields . ,md-fields)) t)))
+(defun anki-mode--create-card-cb (ret)
+  (message "Created card, got back %S" ret))
 
 
 (defun anki-mode-send-new-card ()
