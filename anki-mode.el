@@ -145,10 +145,15 @@ to default to the one used by markdown mode if it is set."
     (s-trim (buffer-string))))
 
 (defun anki-mode-create-card (deck model fields)
-  (let ((md-fields (-map (lambda (pair) (cons (car pair) (anki-mode--markdown (cdr pair)))) fields)))
-    (anki-mode-connect #'anki-mode--create-card-cb "addNotes" `((deckName . ,deck)
-                                              (modelName . ,model)
-                                              (fields . ,md-fields)) t)))
+  (let ((md-fields (-map (lambda (pair) (cons (car pair) (anki-mode--markdown (cdr pair)))) fields))
+        ;; Unfortunately emacs lisp doesn't distinguish between {"notes" :
+        ;; [...]} and ["notes", ...] in alists or plists, so we have to use a
+        ;; hash table for this.
+        (hash-table (make-hash-table)))
+    (puthash 'notes `(((deckName . ,deck)
+                       (modelName . ,model)
+                       (fields . ,md-fields))) hash-table)
+    (anki-mode-connect #'anki-mode--create-card-cb "addNotes" hash-table t)))
 (defun anki-mode--create-card-cb (ret)
   (message "Created card, got back %S" ret))
 

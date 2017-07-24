@@ -26,15 +26,17 @@
 
 
 (ert-deftest test-create-card ()
-  (with-mock
-    (mock (anki-mode-connect 'anki-mode--create-card-cb "addNotes"
-                             '((deckName . "foo deck")
-                               (modelName . "bar Model")
-                               (fields . (("front" . "<p>what is <em>foo</em></p>")
-                                          ("back" . "<p>everything</p>")))) *))
-    (anki-mode-create-card "foo deck" "bar Model"
-                           '(("front" . "what is *foo*")
-                             ("back" . "everything")))))
+  ;; See impl for why a hash table
+  (let ((expected (make-hash-table)))
+    (puthash 'notes '(((deckName . "foo deck")
+                       (modelName . "bar Model")
+                       (fields . (("front" . "<p>what is <em>foo</em></p>")
+                                  ("back" . "<p>everything</p>"))))) expected)
+    (with-mock
+      (mock (anki-mode-connect 'anki-mode--create-card-cb "addNotes" expected *))
+      (anki-mode-create-card "foo deck" "bar Model"
+                             '(("front" . "what is *foo*")
+                               ("back" . "everything"))))))
 
 
 (ert-deftest test-send-buffer-as-new-card ()
