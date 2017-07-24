@@ -20,7 +20,8 @@
     (anki-mode-update-decks))
 
   (let ((anki-mode-decks '()))
-    (anki-mode--update-decks-cb '("foo" "bar"))
+    ;; request seems to give us a vector, not a list
+    (anki-mode--update-decks-cb '["foo" "bar"])
     (should (equal anki-mode-decks '("foo" "bar")))))
 
 

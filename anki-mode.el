@@ -115,7 +115,8 @@ to default to the one used by markdown mode if it is set."
   (interactive)
   (anki-mode-connect #'anki-mode--update-decks-cb "deckNames" nil t))
 (defun anki-mode--update-decks-cb (decks)
-  (setq anki-mode-decks decks))
+  ;; Convert vector to list
+  (setq anki-mode-decks (append decks nil)))
 
 
 
