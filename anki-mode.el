@@ -33,14 +33,18 @@
 (defvar anki-mode-decks '()
   "List of anki deck names. Update with `'anki-mode-update-decks'")
 
-(defvar anki-mode-card-type nil
-  "Buffer local variable containing the current card type")
-
-
 (defvar anki-mode--card-types '(("Basic" ("Front" "Back"))
                        ("Cloze" ())
                        ("Basic (and reversed card)" ("Front" "Back")))
   "TODO: get from anki")
+
+
+(defvar anki-mode-deck nil
+  "Buffer local variable containing the current deck")
+
+(defvar anki-mode-card-type nil
+  "Buffer local variable containing the current card type")
+
 
 
 
@@ -50,6 +54,8 @@ to default to the one used by markdown mode if it is set."
   :group 'anki-mode)
 
 
+
+;;; Interface
 
 (define-derived-mode anki-mode markdown-mode "Anki")
 
@@ -67,6 +73,8 @@ to default to the one used by markdown mode if it is set."
   (insert "[$][/$]")
   (forward-char -4))
 
+
+
 ;;;###autoload
 (defun anki-mode-new-card ()
   (interactive)
@@ -81,13 +89,6 @@ to default to the one used by markdown mode if it is set."
     (insert "@Front\n\n")
     (insert "@Back\n")
     (forward-line -2)))
-
-(defun anki-mode-markdown (string)
-  (interactive)
-  (with-temp-buffer
-    (insert string)
-    (shell-command-on-region (point-min) (point-max) anki-mode-markdown-command (buffer-name))
-    (s-trim (buffer-string))))
 
 (defun anki-mode-connect (callback method params sync)
   (request "http://localhost:8765"
@@ -117,29 +118,44 @@ to default to the one used by markdown mode if it is set."
   (setq anki-mode-decks decks))
 
 
+
+
+;;; Card creation
+
+(defun anki-mode--markdown (string)
+  (interactive)
+  (with-temp-buffer
+    (insert string)
+    (shell-command-on-region (point-min) (point-max) anki-mode-markdown-command (buffer-name))
+    (s-trim (buffer-string))))
+
 (defun anki-mode-create-card (deck model fields)
-  (let ((md-fields (-map (lambda (pair) (cons (car pair) (anki-mode-markdown (cdr pair)))) fields)))
+  (let ((md-fields (-map (lambda (pair) (cons (car pair) (anki-mode--markdown (cdr pair)))) fields)))
     (anki-mode-connect #'anki-mode--create-card-cb "addNotes" `((deckName . ,deck)
                                               (modelName . ,model)
                                               (fields . ,md-fields)) t)))
 (defun anki-mode--create-card-cb (ret)
   (message "Created card, got back %S" ret))
 
+(defun anki-mode--parse-fields (string)
+  (--> string
+       (s-split "^\\s-*@" it)
+       (-map #'s-trim it)
+       (-filter (lambda (field) (not (s-blank? field))) it)
+       (-map (lambda (field) (s-split-up-to "\n" field 1)) it)
+       (-map #'anki-mode--list-to-pair it)))
 
+(defun anki-mode--list-to-pair (li)
+  (cons (car li) (cadr li)))
+
+;;;###autoload
 (defun anki-mode-send-new-card ()
   (interactive)
-  (let ((default-directory "~/code/ankicli")
-        (is-cloze (not (equal 0 (anki-mode--max-cloze)))))
-    (when (not (equal 0
-                      (apply #'call-process
-                             "~/code/ankicli/bin/anki-cli" (buffer-file-name) t t
-                             (-concat '("--markdown")
-                                      (if is-cloze
-                                          '("--model" "Cloze")
-                                        '("--model" "Basic (and reversed card)"))
-                                      ))))
-      (error "anik-cli failed"))))
+  (anki-mode-create-card anki-mode-deck anki-mode-card-type (anki-mode--parse-fields (buffer-string))))
 
+
+
+;;; Cloze helpers
 
 (defun anki-mode--max-cloze ()
   (--> (buffer-substring-no-properties (point-min) (point-max))

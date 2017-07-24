@@ -29,8 +29,28 @@
     (mock (anki-mode-connect 'anki-mode--create-card-cb "addNotes"
                              '((deckName . "foo deck")
                                (modelName . "bar Model")
-                               (fields . ((front . "<p>what is <em>foo</em></p>")
-                                          (back . "<p>everything</p>")))) *))
+                               (fields . (("front" . "<p>what is <em>foo</em></p>")
+                                          ("back" . "<p>everything</p>")))) *))
     (anki-mode-create-card "foo deck" "bar Model"
-                           '((front . "what is *foo*")
-                             (back . "everything")))))
+                           '(("front" . "what is *foo*")
+                             ("back" . "everything")))))
+
+
+(ert-deftest test-send-buffer-as-new-card ()
+  (with-temp-buffer
+    (setq-local anki-mode-deck "foo deck")
+    (setq-local anki-mode-card-type "bar model")
+
+    (let ((anki-mode-card-types '("bar model" ("front" "back"))))
+
+      (insert "@front\n")
+      (insert "some text content\n")
+      (insert "@back\n")
+      (insert "some more buffer text\n")
+
+      (with-mock
+        (mock (anki-mode-create-card "foo deck" "bar model"
+                                     '(("front" . "some text content")
+                                       ("back" . "some more buffer text"))))
+
+        (anki-mode-send-new-card)))))
