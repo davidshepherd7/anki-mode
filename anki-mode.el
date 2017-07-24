@@ -95,7 +95,7 @@ to default to the one used by markdown mode if it is set."
         (error "Unrecognised card type: \"%s\"" anki-mode-card-type))
       (-each (cdr card-fields)
         (lambda (field)
-          (insert (s-concat "@" field "\n\n")))))
+          (insert (s-concat "@" field "\n\n\n")))))
 
     (goto-char (point-min))
     (forward-line 1)))
