@@ -19,6 +19,8 @@
 
 ;; TODO: look at cloze stuff again
 
+;; TODO: testing with hash tables?
+
 
 ;;; Code:
 
