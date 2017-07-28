@@ -69,9 +69,15 @@ to default to the one used by markdown mode if it is set."
 
 (defun anki-mode-insert-latex-math ()
   (interactive)
-  ;; TODO: handle regions
-  (insert "[$][/$]")
-  (forward-char -4))
+  (if (use-region-p)
+      (save-excursion
+        (goto-char (region-beginning))
+        (insert "[$]")
+        (goto-char (region-end))
+        (insert "[/$]"))
+    ;; else
+    (insert "[$][/$]")
+    (forward-char -4)))
 
 ;;;###autoload
 (defun anki-mode-new-card ()

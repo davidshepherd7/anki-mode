@@ -98,3 +98,31 @@
       (should (s-matches? "^@foo" (buffer-string)))
       (should (s-matches? "^@bar" (buffer-string))))
     ))
+
+
+(ert-deftest test-latex-math-insertion ()
+
+  ;; Default
+  (with-temp-buffer
+    (call-interactively #'anki-mode-insert-latex-math)
+    (should (s-equals? (buffer-string) "[$][/$]"))
+    (should (looking-at-p (regexp-quote "[/$]"))))
+
+  ;; Region
+  (with-temp-buffer
+    (transient-mark-mode)
+
+    (insert "foo\n")
+    (insert "\\alpha = \\beta ")
+    (insert "bar")
+
+    (goto-char 5)
+    (set-mark 19)
+
+    (call-interactively #'anki-mode-insert-latex-math)
+
+    ;; region has been wrapped with latex math
+    (should (s-contains? "[$]\\alpha = \\beta[/$]" (buffer-string)))
+    ;; Point is not moved
+    (should (looking-at-p (regexp-quote "[$]")))
+    ))
