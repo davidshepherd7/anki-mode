@@ -90,6 +90,9 @@ to default to the one used by markdown mode if it is set."
 ;;;###autoload
 (defun anki-mode-new-card ()
   (interactive)
+
+  (unless anki-mode-decks (anki-mode-refresh))
+
   (let ((previous-card-type anki-mode-card-type)
         (previous-deck anki-mode-deck))
 
@@ -130,6 +133,13 @@ to default to the one used by markdown mode if it is set."
                        (if (not data)
                            (message "Warning: anki-mode-connect got null data, this probably means a bad query was sent")
                          (funcall callback data))))))
+
+(defun anki-mode-refresh ()
+  (interactive)
+  (anki-mode-check-version)
+  (anki-mode-update-decks)
+  ;; TODO: card types
+  )
 
 (defun anki-mode-check-version ()
   (interactive)
