@@ -62,7 +62,7 @@
 
 
 (ert-deftest test-new-card ()
-  (let ((anki-mode--decks '("Default" "MOCK read"))
+  (let ((anki-mode-decks '("Default" "MOCK read"))
         (anki-mode--card-types '(("Basic" . ("Front" "Back"))
                                  ("Cloze" . ())
                                  ("Basic (and reversed card)" . ("Front" "Back"))
