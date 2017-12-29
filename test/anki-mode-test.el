@@ -1,4 +1,24 @@
 
+(ert-deftest test-request-callback-success ()
+  (let* ((mock-callback (lambda (result)
+                          (should (s-equals? result "some data"))))
+         (function-to-test (anki-mode--http-success-factory mock-callback)))
+    (funcall function-to-test
+             :data '((result . "some data") (error))
+             :foo "other ignored thing")))
+
+
+(ert-deftest test-request-callback-error ()
+  (let* ((mock-callback (lambda (result)
+                          ;; should never be called
+                          (should nil)))
+         (function-to-test (anki-mode--http-success-factory mock-callback)))
+    (should-error (funcall function-to-test
+                           :data '((result) (error "uh oh"))
+                           :foo "other ignored thing"))))
+
+
+
 (ert-deftest test-check-version ()
   ;; call
   (with-mock

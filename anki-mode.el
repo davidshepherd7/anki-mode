@@ -33,17 +33,20 @@
 (eval-when-compile
   (require 'cl))
 
+;; (setq request-log-level 'debug)
+;; (setq request-message-level 'debug)
+
 
 
-(defvar anki-mode--required-anki-connect-version 2
+(defvar anki-mode--required-anki-connect-version 5
   "Version of the anki connect plugin required")
 
 (defvar anki-mode-decks '()
   "List of anki deck names. Update with `'anki-mode-update-decks'")
 
 (defvar anki-mode--card-types '(("Basic" . ("Front" "Back"))
-                       ("Cloze" . ())
-                       ("Basic (and reversed card)" . ("Front" "Back")))
+                            ("Cloze" . ())
+                            ("Basic (and reversed card)" . ("Front" "Back")))
   "TODO: get from anki")
 
 
@@ -122,19 +125,32 @@ to default to the one used by markdown mode if it is set."
 ;;; Anki-connect helpers
 
 (defun anki-mode-connect (callback method params sync)
-  (request "http://localhost:8765"
-           :type "POST"
-           :data (json-encode `(("action" . ,method) ("params" . ,params)))
-           :headers '(("Content-Type" . "application/json"))
-           :parser 'json-read
-           :sync sync
-           :success (function*
-                     (lambda (&key data &allow-other-keys)
-                       (if (not data)
-                           (error "Warning: anki-mode-connect got null data, this probably means a bad query was sent")
-                         (funcall callback data))))
-           :error  (function* (lambda (&key error-thrown &allow-other-keys)
-                                (error "Got error: %S" error-thrown)))))
+  (let ((data (json-encode (-concat (list (cons "action" method)
+                                          (cons "version" anki-mode--required-anki-connect-version))
+                                    (if params (list (cons "params" params)) (list))))))
+    (message "Anki connect sending %S" data)
+    (request "http://localhost:8765"
+             :type "POST"
+             :data data
+             :headers '(("Content-Type" . "application/json"))
+             :parser 'json-read
+             :sync sync
+             :success (anki-mode--http-success-factory callback)
+             :error  (function* (lambda (&key error-thrown &allow-other-keys)
+                                  (error "Got error: %S" error-thrown))))))
+
+(defun anki-mode--http-success-factory (callback)
+  (function*
+   (lambda (&key data &allow-other-keys)
+     (when (not data)
+       (message "Warning: anki-mode-connect got null data, this probably means a bad query was sent"))
+
+     ;; (message "Got anki data %S" data)
+     (let ((the-error (cdr (assoc 'error data)))
+           (the-result (cdr (assoc 'result data))))
+       (when the-error
+         (error "Anki connect returned error: %S" the-error))
+       (funcall callback the-result)))))
 
 (defun anki-mode-refresh ()
   (interactive)
