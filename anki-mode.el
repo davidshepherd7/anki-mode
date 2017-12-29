@@ -131,8 +131,10 @@ to default to the one used by markdown mode if it is set."
            :success (function*
                      (lambda (&key data &allow-other-keys)
                        (if (not data)
-                           (message "Warning: anki-mode-connect got null data, this probably means a bad query was sent")
-                         (funcall callback data))))))
+                           (error "Warning: anki-mode-connect got null data, this probably means a bad query was sent")
+                         (funcall callback data))))
+           :error  (function* (lambda (&key error-thrown &allow-other-keys)
+                                (error "Got error: %S" error-thrown)))))
 
 (defun anki-mode-refresh ()
   (interactive)
