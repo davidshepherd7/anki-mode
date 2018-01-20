@@ -45,7 +45,7 @@
   "List of anki deck names. Update with `'anki-mode-update-decks'")
 
 (defvar anki-mode--card-types '(("Basic" . ("Front" "Back"))
-                            ("Cloze" . ())
+                            ("Cloze" . ("Text" "Extra"))
                             ("Basic (and reversed card)" . ("Front" "Back")))
   "TODO: get from anki")
 
@@ -221,7 +221,7 @@ to default to the one used by markdown mode if it is set."
 
 (defun anki-mode--max-cloze ()
   (--> (buffer-substring-no-properties (point-min) (point-max))
-       (s-match-strings-all "{{c\\([0-9]\\)::" it)
+       (s-match-strings-all "{{c\\([0-9]+?\\)::" it)
        (-map #'cadr it) ; First group of each match
        (-map #'string-to-number it)
        (or it '(0))
