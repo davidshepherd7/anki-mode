@@ -215,7 +215,7 @@ to default to the one used by markdown mode if it is set."
 ;;;###autoload
 (defun anki-mode-send-new-card ()
   (interactive)
-  (anki-mode-create-card anki-mode-deck anki-mode-card-type (anki-mode--parse-fields (buffer-string))))
+  (anki-mode-create-card anki-mode-deck anki-mode-card-type (anki-mode--parse-fields (buffer-substring-no-properties (point-min) (point-max)))))
 
 
 
