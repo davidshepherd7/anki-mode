@@ -125,9 +125,11 @@ to default to the one used by markdown mode if it is set."
 ;;; Anki-connect helpers
 
 (defun anki-mode-connect (callback method params sync)
-  (let ((data (json-encode (-concat (list (cons "action" method)
-                                          (cons "version" anki-mode--required-anki-connect-version))
-                                    (if params (list (cons "params" params)) (list))))))
+  (let ((data (--> (list (cons "action" method)
+                         (cons "version" anki-mode--required-anki-connect-version))
+                   (-concat it (if params (list (cons "params" params)) (list)))
+                   (json-encode it)
+                   (encode-coding-string it 'utf-8))))
     (message "Anki connect sending %S" data)
     (request "http://localhost:8765"
              :type "POST"
