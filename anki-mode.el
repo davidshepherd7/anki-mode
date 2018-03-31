@@ -62,7 +62,8 @@
 (defcustom anki-mode-markdown-command (or markdown-command "markdown")
   "Markdown command to run to convert markdown to html. Attempts
 to default to the one used by markdown mode if it is set."
-  :group 'anki-mode)
+  :group 'anki-mode
+  :type 'string)
 
 
 
