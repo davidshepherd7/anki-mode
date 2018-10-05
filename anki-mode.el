@@ -74,13 +74,8 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
 ;; underscores, which come up a lot in LaTeX maths and when talking about code.
 (define-derived-mode anki-mode gfm-mode "Anki")
 
-(define-key anki-mode-map (kbd "C-c C-c") #'anki-mode-send-and-new-card)
+(define-key anki-mode-map (kbd "C-c C-c") #'anki-mode-send-new-card)
 (define-key anki-mode-map (kbd "$") #'anki-mode-insert-latex-math)
-
-(defun anki-mode-send-and-new-card ()
-  (interactive)
-  (anki-mode-send-new-card)
-  (anki-mode-new-card))
 
 (defun anki-mode-insert-latex-math ()
   (interactive)
@@ -100,19 +95,14 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
 
   (unless anki-mode-decks (anki-mode-refresh))
 
-  (let ((previous-card-type anki-mode-card-type)
-        (previous-deck anki-mode-deck))
+  (let ((deck (completing-read "Choose deck: " anki-mode-decks))
+        (card-type (completing-read "Choose card type: "
+                                    (-map #'car anki-mode--card-types))))
 
     (find-file (make-temp-file "anki-card-"))
     (anki-mode)
-
-    (setq-local anki-mode-deck
-                (or previous-deck
-                    (completing-read "Choose deck: " anki-mode-decks)))
-    (setq-local anki-mode-card-type
-                (or previous-card-type
-                    (completing-read "Choose card type: "
-                                     (-map #'car anki-mode--card-types))))
+    (setq-local anki-mode-deck deck)
+    (setq-local anki-mode-card-type card-type)
 
     (let ((card-fields (assoc anki-mode-card-type anki-mode--card-types)))
       (unless card-fields
@@ -123,6 +113,31 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
 
     (goto-char (point-min))
     (forward-line 1)))
+
+
+
+;;; Menu page
+
+(define-derived-mode anki-mode-menu-mode special-mode "Anki Menu"
+  "Major mode for the anki-mode menu page."
+  (let ((inhibit-read-only t))
+    (insert "Anki Mode\n")
+    (insert "---------------\n")
+    (insert "[n]: New card\n")
+    (insert "[r]: Refresh anki decks list\n")))
+
+(define-key anki-mode-menu-mode-map (kbd "n") #'anki-mode-new-card)
+(define-key anki-mode-menu-mode-map (kbd "r") #'anki-mode-refresh)
+
+(defun anki-mode-menu-buffer ()
+  (or (get-buffer "*Anki*")
+      (with-current-buffer (get-buffer-create "*Anki*")
+        (anki-mode-menu-mode)
+        (current-buffer))))
+
+(defun anki-mode-menu ()
+  (interactive)
+  (switch-to-buffer (anki-mode-menu-buffer)))
 
 
 
@@ -193,6 +208,7 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
     (s-trim (buffer-string))))
 
 (defun anki-mode-create-card (deck model fields)
+  (save-buffer)
   (let ((md-fields (-map (lambda (pair) (cons (car pair) (anki-mode--markdown (cdr pair)))) fields))
         ;; Unfortunately emacs lisp doesn't distinguish between {"notes" :
         ;; [...]} and ["notes", ...] in alists or plists, so we have to use a
@@ -203,7 +219,8 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
                        (fields . ,md-fields))) hash-table)
     (anki-mode-connect #'anki-mode--create-card-cb "addNotes" hash-table t)))
 (defun anki-mode--create-card-cb (ret)
-  (message "Created card, got back %S" ret))
+  (message "Created card, got back %S" ret)
+  (anki-mode-menu))
 
 (defun anki-mode--parse-fields (string)
   (--> string
