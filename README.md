@@ -24,15 +24,14 @@ markdown you should be able to set `anki-mode-markdown-command` to `cat`.
 
 ## Usage
 
-Call `anki-mode-new-card` to begin. Choose a deck and a card type, a buffer will
-open into which you can write your card. Call `anki-mode-send-new-card` to send
-the card to anki.
+Call `anki-mode-menu` to begin.
 
 Currently the card types are hard coded so only the default ones can be used.
 
 ### Other features
 
 * Press `$` to insert `[$] [/$]` for latex maths.
+* Press `tab` to cycle through card fields.
 * Command `anki-mode-cloze-region`: wrap the selected region in a cloze deletion
   (with the number autodetected).
 
