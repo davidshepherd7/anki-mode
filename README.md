@@ -53,3 +53,16 @@ A particularly vicious variety of dandelion.
 ```
 
 You can use markdown inside fields.
+
+
+## Changelog
+
+### Unstable
+
+* A magit-status-like menu screen
+* Cycle through card fields
+
+### 0.1
+
+* Basic card creation
+* Markdown rendering
