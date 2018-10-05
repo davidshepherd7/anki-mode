@@ -49,6 +49,11 @@
                             ("Basic (and reversed card)" . ("Front" "Back")))
   "TODO: get from anki")
 
+(defvar anki-mode-previous-deck nil
+  "The most recently selected deck")
+
+(defvar anki-mode-previous-card-type nil
+  "The most recently selected card type")
 
 (defvar anki-mode-deck nil
   "Buffer local variable containing the current deck")
@@ -99,35 +104,28 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
         (card-type (completing-read "Choose card type: "
                                     (-map #'car anki-mode--card-types))))
 
-    (find-file (make-temp-file "anki-card-"))
-    (anki-mode)
-    (setq-local anki-mode-deck deck)
-    (setq-local anki-mode-card-type card-type)
+    (setq anki-mode-previous-deck deck)
+    (setq anki-mode-previous-card-type card-type)
 
-    (let ((card-fields (assoc anki-mode-card-type anki-mode--card-types)))
-      (unless card-fields
-        (error "Unrecognised card type: \"%s\"" anki-mode-card-type))
-      (-each (cdr card-fields)
-        (lambda (field)
-          (insert (s-concat "@" field "\n\n\n")))))
-
-    (goto-char (point-min))
-    (forward-line 1)))
+    (anki-mode-new-card-noninteractive deck card-type)))
 
 
 
 ;;; Menu page
 
 (define-derived-mode anki-mode-menu-mode special-mode "Anki Menu"
-  "Major mode for the anki-mode menu page."
-  (let ((inhibit-read-only t))
-    (insert "Anki Mode\n")
-    (insert "---------------\n")
-    (insert "[n]: New card\n")
-    (insert "[r]: Refresh anki decks list\n")))
+  "Major mode for the anki-mode menu page.")
 
 (define-key anki-mode-menu-mode-map (kbd "n") #'anki-mode-new-card)
-(define-key anki-mode-menu-mode-map (kbd "r") #'anki-mode-refresh)
+(define-key anki-mode-menu-mode-map (kbd "r") (lambda ()
+                                            (interactive)
+                                            (anki-mode-refresh)
+                                            (anki-mode-menu-render)))
+(define-key anki-mode-menu-mode-map (kbd "a") (lambda ()
+                                            (interactive)
+                                            (anki-mode-new-card-noninteractive
+                                             anki-mode-previous-deck
+                                             anki-mode-previous-card-type)))
 
 (defun anki-mode-menu-buffer ()
   (or (get-buffer "*Anki*")
@@ -138,6 +136,23 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
 (defun anki-mode-menu ()
   (interactive)
   (switch-to-buffer (anki-mode-menu-buffer)))
+
+(defun anki-mode-menu-render ()
+  (let ((inhibit-read-only t))
+    (erase-buffer)
+    (insert "Anki Mode\n")
+    (insert "---------------\n")
+    (insert "[n]: New card\n")
+    (insert "[a]: New card with current settings (deck: '"
+            (or anki-mode-previous-deck "NULL")
+            "', card type: '"
+            (or anki-mode-previous-card-type "NULL")
+            "')\n")
+    (insert "[r]: Refresh decks list\n")
+    (insert "\n\n\n")
+    (insert "Decks\n")
+    (insert "---------------\n")
+    (--each anki-mode-decks (insert "* ") (insert it) (insert "\n"))))
 
 
 
@@ -200,6 +215,22 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
 
 
 ;;; Card creation
+
+(defun anki-mode-new-card-noninteractive (deck card-type)
+  (find-file (make-temp-file "anki-card-"))
+  (anki-mode)
+  (setq-local anki-mode-deck deck)
+  (setq-local anki-mode-card-type card-type)
+
+  (let ((card-fields (assoc anki-mode-card-type anki-mode--card-types)))
+    (unless card-fields
+      (error "Unrecognised card type: \"%s\"" anki-mode-card-type))
+    (-each (cdr card-fields)
+      (lambda (field)
+        (insert (s-concat "@" field "\n\n\n")))))
+
+  (goto-char (point-min))
+  (forward-line 1))
 
 (defun anki-mode--markdown (string)
   (interactive)
