@@ -163,6 +163,7 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
 (defun anki-mode--http-success-factory (callback)
   (function*
    (lambda (&key data &allow-other-keys)
+     (message "Anki connect recv %S" data)
      (when (not data)
        (message "Warning: anki-mode-connect got null data, this probably means a bad query was sent"))
 
@@ -185,7 +186,7 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
   (anki-mode-connect #'anki-mode--check-version-cb "version" nil t))
 (defun anki-mode--check-version-cb (version)
   (when (not (= version anki-mode--required-anki-connect-version))
-    (message "Warning you have anik connect version %S installed, but %S is required"
+    (message "Warning you have anki connect version %S installed, but %S is required"
              version anki-mode--required-anki-connect-version)))
 
 (defun anki-mode-update-decks ()
