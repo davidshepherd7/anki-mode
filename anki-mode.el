@@ -59,9 +59,10 @@
 
 
 
-(defcustom anki-mode-markdown-command (or markdown-command "markdown")
-  "Markdown command to run to convert markdown to html. Attempts
-to default to the one used by markdown mode if it is set."
+(defcustom anki-mode-markdown-command "pandoc --from markdown_github --to html"
+  "Markdown command to run to convert markdown to html.
+
+Use pandoc by default because it can do sensible things with underscores in LaTeX."
   :group 'anki-mode
   :type 'string)
 
@@ -69,7 +70,9 @@ to default to the one used by markdown mode if it is set."
 
 ;;; Interface
 
-(define-derived-mode anki-mode markdown-mode "Anki")
+;; github flavoured markdown mode instead of markdown mode because it works with
+;; underscores, which come up a lot in LaTeX maths and when talking about code.
+(define-derived-mode anki-mode gfm-mode "Anki")
 
 (define-key anki-mode-map (kbd "C-c C-c") #'anki-mode-send-and-new-card)
 (define-key anki-mode-map (kbd "$") #'anki-mode-insert-latex-math)
