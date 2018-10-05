@@ -279,7 +279,7 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
        (-map #'anki-mode--list-to-pair it)))
 
 (defun anki-mode--list-to-pair (li)
-  (cons (car li) (cadr li)))
+  (cons (car li) (or (cadr li) "")))
 
 ;;;###autoload
 (defun anki-mode-send-new-card ()

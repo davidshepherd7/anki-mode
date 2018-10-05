@@ -81,6 +81,26 @@
         (anki-mode-send-new-card)))))
 
 
+(ert-deftest test-send-buffer-as-new-card-blank-field ()
+  (with-temp-buffer
+    (setq-local anki-mode-deck "foo deck")
+    (setq-local anki-mode-card-type "bar model")
+
+    (let ((anki-mode-card-types '("bar model" ("front" "back"))))
+
+      (insert "@front\n")
+      (insert "some text content\n")
+      (insert "@back\n")
+
+      (with-mock
+        (mock (anki-mode-create-card "foo deck" "bar model"
+                                     '(("front" . "some text content")
+                                       ("back" . ""))))
+
+        (anki-mode-send-new-card)))))
+
+
+
 (ert-deftest test-new-card ()
   (let ((anki-mode-decks '("Default" "MOCK read"))
         (anki-mode--card-types '(("Basic" . ("Front" "Back"))
