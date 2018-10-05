@@ -109,6 +109,14 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
 
     (anki-mode-new-card-noninteractive deck card-type)))
 
+
+;;;###autoload
+(defun anki-mode-menu ()
+  (interactive)
+  (switch-to-buffer (anki-mode-menu-buffer))
+  (anki-mode-menu-render))
+
+
 
 
 ;;; Menu page
@@ -132,10 +140,6 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
       (with-current-buffer (get-buffer-create "*Anki*")
         (anki-mode-menu-mode)
         (current-buffer))))
-
-(defun anki-mode-menu ()
-  (interactive)
-  (switch-to-buffer (anki-mode-menu-buffer)))
 
 (defun anki-mode-menu-render ()
   (let ((inhibit-read-only t))
