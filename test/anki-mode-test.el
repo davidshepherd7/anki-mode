@@ -146,3 +146,37 @@
     ;; Point is not moved
     (should (looking-at-p (regexp-quote "[$]")))
     ))
+
+(ert-deftest test-next-field-no-markers ()
+  ;; No @ symbols
+  (with-temp-buffer
+    (should-error (anki-mode-next-field))))
+
+(ert-deftest test-next-field-typical-buffer ()
+  ;; Typical buffer
+  (with-temp-buffer
+    (insert "@front\n")
+    (insert "foo\n")
+    (insert "@back\n")
+    (insert "bar\n")
+    (goto-char (point-min))
+
+    (anki-mode-next-field)
+    (should (looking-at-p "foo"))
+
+    (anki-mode-next-field)
+    (should (looking-at-p "bar"))
+
+    (anki-mode-next-field)
+    (should (looking-at-p "foo"))))
+
+(ert-deftest test-next-field-missing-final-newline ()
+  ;; No trailing newline
+  (with-temp-buffer
+    (insert "@front\n")
+    (insert "foo\n")
+    (insert "@back")
+    (goto-char (point-min))
+    (anki-mode-next-field)
+    (anki-mode-next-field)
+    (should (looking-back "@back"))))

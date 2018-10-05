@@ -61,6 +61,8 @@
 (defvar anki-mode-card-type nil
   "Buffer local variable containing the current card type")
 
+(defconst anki-mode--field-start-regex "^\\s-*@")
+
 
 
 
@@ -81,6 +83,7 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
 
 (define-key anki-mode-map (kbd "C-c C-c") #'anki-mode-send-new-card)
 (define-key anki-mode-map (kbd "$") #'anki-mode-insert-latex-math)
+(define-key anki-mode-map (kbd "<tab>") #'anki-mode-next-field)
 
 (defun anki-mode-insert-latex-math ()
   (interactive)
@@ -93,6 +96,15 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
     ;; else
     (insert "[$][/$]")
     (forward-char -4)))
+
+(defun anki-mode-next-field ()
+  (interactive)
+  (goto-char
+   (save-excursion
+     (or (search-forward-regexp anki-mode--field-start-regex nil t)
+         (progn (goto-char (point-min))
+                (search-forward-regexp anki-mode--field-start-regex nil t)))))
+  (forward-line))
 
 ;;;###autoload
 (defun anki-mode-new-card ()
@@ -260,7 +272,7 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
 
 (defun anki-mode--parse-fields (string)
   (--> string
-       (s-split "^\\s-*@" it)
+       (s-split anki-mode--field-start-regex it)
        (-map #'s-trim it)
        (-filter (lambda (field) (not (s-blank? field))) it)
        (-map (lambda (field) (s-split-up-to "\n" field 1)) it)
