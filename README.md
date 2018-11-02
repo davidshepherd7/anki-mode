@@ -11,8 +11,6 @@
 
 A major mode for creating [Anki](https://en.wikipedia.org/wiki/Anki_(software)) cards.
 
-Currently mostly works for me, but consider this alpha-quality software!
-
 ## Installation
 
 1. Install [anki-connect](https://github.com/FooSoft/anki-connect) (anki addon 2055492159) and restart Anki.
