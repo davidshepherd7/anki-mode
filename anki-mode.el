@@ -126,12 +126,18 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
 (defun anki-mode-menu ()
   (interactive)
   (switch-to-buffer (anki-mode-menu-buffer))
+  (unless (anki-mode-initial-load-done-p)
+    (anki-mode-refresh))
   (anki-mode-menu-render))
 
 
 
 
 ;;; Menu page
+
+(defun anki-mode-initial-load-done-p ()
+  "Check if data has been loaded from Anki connect"
+  (and anki-mode--card-types anki-mode--decks))
 
 (define-derived-mode anki-mode-menu-mode special-mode "Anki Menu"
   "Major mode for the anki-mode menu page.")
