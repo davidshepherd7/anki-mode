@@ -15,16 +15,16 @@ A major mode for creating [Anki](https://en.wikipedia.org/wiki/Anki_(software)) 
 
 1. Install [anki-connect](https://github.com/FooSoft/anki-connect) (anki addon 2055492159) and restart Anki.
 2. Install this package (drop the `.el` file into your path and require it).
-
-To use markdown you will also need a markdown parser installed. To not use
-markdown you should be able to set `anki-mode-markdown-command` to `cat`.
+3. `anki-mode-markdown-command` To your preferred markdown parser command, the
+   default is `pandoc` with github flavoured markdown because it handles `_`
+   well. To disable markdown set `anki-mode-markdown-command` to `cat`.
 
 
 ## Usage
 
-Call `anki-mode-menu` to begin.
+Call `anki-mode-menu` to begin. Note that Anki must be running in order to use
+`anki-mode`.
 
-Currently the card types are hard coded so only the default ones can be used.
 
 ### Other features
 
@@ -32,6 +32,13 @@ Currently the card types are hard coded so only the default ones can be used.
 * Press `tab` to cycle through card fields.
 * Command `anki-mode-cloze-region`: wrap the selected region in a cloze deletion
   (with the number autodetected).
+
+### TODO
+
+* Currently the card types are hard coded so only the default ones can be used.
+* Updating existing cards would be useful.
+* Currently LaTeX can only be compiled within Anki itself (by previewing the card).
+
 
 ## File format
 
@@ -50,6 +57,15 @@ A particularly vicious variety of dandelion.
 ```
 
 You can use markdown inside fields.
+
+
+## See also
+
+[org-drill](https://orgmode.org/worg/org-contrib/org-drill.html) and
+[pamparam](https://github.com/abo-abo/pamparam) are implementations of an entire
+spaced repetition system within Emacs. You might prefer one of these if you want
+to do the memorisation part of spaced repetition within Emacs, I prefer to use
+the Anki mobile app.
 
 
 ## Changelog
