@@ -1,26 +1,21 @@
-;;; anki-mode.el --- TODO -*- lexical-binding: t; -*-
+;;; anki-mode.el --- A major mode for creating anki cards -*- lexical-binding: t; -*-
 
 ;; Copyright © 2017 David Shepherd
 
 ;; Author: David Shepherd <davidshepherd7@gmail.com>
 ;; Version: 0.1
-;; Package-Requires: ((emacs "24") (dash "2.12.0") (markdown-mode "2.2") (s "1.11.0") (request "0.3.0"))
-;; Keywords: TODO
+;; Package-Requires: ((emacs "24.4") (dash "2.12.0") (markdown-mode "2.2") (s "1.11.0") (request "0.3.0"))
+;; Keywords: tools
 ;; URL: https://github.com/davidshepherd7/anki-mode
 
 
 ;;; Commentary:
 
-;; TODO: documentation
-
-;; TODO: get card types from anki
-
-;; TODO: list/edit existing cards?
-
-;; TODO: look at cloze stuff again
-
-;; TODO: testing with hash tables?
-
+;; A major mode for creating Anki cards.
+;;
+;; Requires Anki to be running, with the anki-connect addon installed.
+;;
+;; Usage: call `anki-mode-menu' to begin.
 
 ;;; Code:
 
@@ -39,27 +34,27 @@
 
 
 (defvar anki-mode--required-anki-connect-version 5
-  "Version of the anki connect plugin required")
+  "Version of the anki connect plugin required.")
 
 (defvar anki-mode--decks '()
-  "List of anki deck names. Update with `'anki-mode-update-decks'")
+  "List of anki deck names.")
 
 (defvar anki-mode--card-types '(("Basic" . ("Front" "Back"))
                             ("Cloze" . ("Text" "Extra"))
                             ("Basic (and reversed card)" . ("Front" "Back")))
-  "TODO: get from anki")
+  "TODO: get from anki.")
 
 (defvar anki-mode--previous-deck nil
-  "The most recently selected deck")
+  "The most recently selected deck.")
 
 (defvar anki-mode--previous-card-type nil
-  "The most recently selected card type")
+  "The most recently selected card type.")
 
 (defvar anki-mode--deck nil
-  "Buffer local variable containing the current deck")
+  "Buffer local variable containing the current deck.")
 
 (defvar anki-mode--card-type nil
-  "Buffer local variable containing the current card type")
+  "Buffer local variable containing the current card type.")
 
 (defconst anki-mode--field-start-regex "^\\s-*@")
 
@@ -86,6 +81,7 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
 (define-key anki-mode-map (kbd "<tab>") #'anki-mode-next-field)
 
 (defun anki-mode-insert-latex-math ()
+  "Wrap region with [$][/$] (LaTeX math markers)."
   (interactive)
   (if (use-region-p)
       (save-excursion
@@ -98,6 +94,7 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
     (forward-char -4)))
 
 (defun anki-mode-next-field ()
+  "Go to next anki card field."
   (interactive)
   (goto-char
    (save-excursion
@@ -108,6 +105,7 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
 
 ;;;###autoload
 (defun anki-mode-new-card ()
+  "Create a buffer for a new Anki card."
   (interactive)
 
   (unless anki-mode--decks (anki-mode-refresh))
@@ -124,6 +122,7 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
 
 ;;;###autoload
 (defun anki-mode-menu ()
+  "Open an Anki menu buffer."
   (interactive)
   (switch-to-buffer (anki-mode-menu-buffer))
   (unless (anki-mode-initial-load-done-p)
@@ -136,7 +135,7 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
 ;;; Menu page
 
 (defun anki-mode-initial-load-done-p ()
-  "Check if data has been loaded from Anki connect"
+  "Check if data has been loaded from Anki connect."
   (and anki-mode--card-types anki-mode--decks))
 
 (define-derived-mode anki-mode-menu-mode special-mode "Anki Menu"
@@ -154,12 +153,14 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
                                              anki-mode--previous-card-type)))
 
 (defun anki-mode-menu-buffer ()
+  "Get or create the Anki mode menu buffer."
   (or (get-buffer "*Anki*")
       (with-current-buffer (get-buffer-create "*Anki*")
         (anki-mode-menu-mode)
         (current-buffer))))
 
 (defun anki-mode-menu-render ()
+  "Render the Anki mode menu into the current buffer."
   (let ((inhibit-read-only t))
     (erase-buffer)
     (insert "Anki Mode\n")
@@ -181,6 +182,13 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
 ;;; Anki-connect helpers
 
 (defun anki-mode-connect (callback method params sync)
+  "Send a request to the anki-connect extension running inside Anki.
+
+Sends a request to run METHOD with the provided PARAMS.
+
+If SYNC is non-nil the request will be made synchronously.
+
+When done CALLBACK will be called."
   (let ((data (--> (list (cons "action" method)
                          (cons "version" anki-mode--required-anki-connect-version))
                    (-concat it (if params (list (cons "params" params)) (list)))
@@ -212,6 +220,7 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
        (funcall callback the-result)))))
 
 (defun anki-mode-refresh ()
+  "Refresh data from Anki."
   (interactive)
   (anki-mode-check-version)
   (anki-mode-update-decks)
@@ -219,6 +228,7 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
   )
 
 (defun anki-mode-check-version ()
+  "Check that the available version of anki-connect is supported."
   (interactive)
   (anki-mode-connect #'anki-mode--check-version-cb "version" nil t))
 (defun anki-mode--check-version-cb (version)
@@ -227,6 +237,7 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
              version anki-mode--required-anki-connect-version)))
 
 (defun anki-mode-update-decks ()
+  "Load/refresh list of decks from Anki."
   (interactive)
   (anki-mode-connect #'anki-mode--update-decks-cb "deckNames" nil t))
 (defun anki-mode--update-decks-cb (decks)
@@ -255,7 +266,6 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
   (forward-line 1))
 
 (defun anki-mode--markdown (string)
-  (interactive)
   (with-temp-buffer
     (insert string)
     (shell-command-on-region (point-min) (point-max) anki-mode-markdown-command (buffer-name))
@@ -289,6 +299,7 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
 
 ;;;###autoload
 (defun anki-mode-send-new-card ()
+  "Send the current buffer as a card to anki-connect."
   (interactive)
   (anki-mode-create-card anki-mode--deck anki-mode--card-type (anki-mode--parse-fields (buffer-substring-no-properties (point-min) (point-max)))))
 
@@ -305,6 +316,7 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
        (-max it)))
 
 (defun anki-mode-cloze-region (start end)
+  "Wrap the START to END or current region in a new cloze tag."
   (interactive "r")
   (save-excursion
     ;; Do end first because inserting at start moves end
