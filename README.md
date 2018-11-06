@@ -73,6 +73,8 @@ the Anki mobile app.
 
 * A magit-status-like menu screen
 * Cycle through card fields
+* Various minor quality improvements
+* Handling of non-default card types
 
 ### 0.1
 
