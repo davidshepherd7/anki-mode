@@ -39,10 +39,8 @@
 (defvar anki-mode--decks '()
   "List of anki deck names.")
 
-(defvar anki-mode--card-types '(("Basic" . ("Front" "Back"))
-                            ("Cloze" . ("Text" "Extra"))
-                            ("Basic (and reversed card)" . ("Front" "Back")))
-  "TODO: get from anki.")
+(defvar anki-mode--card-types '()
+  "List of anki card type names and their fields.")
 
 (defvar anki-mode--previous-deck nil
   "The most recently selected deck.")
@@ -141,7 +139,7 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
 
 (defun anki-mode-initial-load-done-p ()
   "Check if data has been loaded from Anki connect."
-  (and anki-mode--card-types anki-mode--decks))
+  (and anki-mode--card-types anki-mode--decks anki-mode--card-types))
 
 (define-derived-mode anki-mode-menu-mode special-mode "Anki Menu"
   "Major mode for the anki-mode menu page.")
@@ -229,8 +227,10 @@ When done CALLBACK will be called."
   (interactive)
   (anki-mode-check-version)
   (anki-mode-update-decks)
-  ;; TODO: card types
-  )
+  (anki-mode-update-card-types))
+
+(defun anki-mode--vector-to-list (vec)
+  (append vec nil))
 
 (defun anki-mode-check-version ()
   "Check that the available version of anki-connect is supported."
@@ -246,8 +246,24 @@ When done CALLBACK will be called."
   (interactive)
   (anki-mode-connect #'anki-mode--update-decks-cb "deckNames" nil t))
 (defun anki-mode--update-decks-cb (decks)
-  ;; Convert vector to list
-  (setq anki-mode--decks (append decks nil)))
+  (setq anki-mode--decks (anki-mode--vector-to-list decks)))
+
+
+(defun anki-mode-update-card-types ()
+  "Load/refresh list of card-types from Anki."
+  (interactive)
+  (anki-mode-connect #'anki-mode--update-card-types-cb-1 "modelNames" nil t))
+(defun anki-mode--update-card-types-cb-1 (card-names)
+  (-each (anki-mode--vector-to-list card-names)
+    (lambda (card-name)
+      (anki-mode-connect (lambda (fields) (anki-mode--update-card-types-cb-2 card-name fields)) "modelFieldNames" (list (cons "modelName" card-name)) t))))
+(defun anki-mode--update-card-types-cb-2 (card-name fields)
+  (let ((item (assoc card-name anki-mode--card-types)))
+    (if item
+        (setf (cdr item) (anki-mode--vector-to-list fields))
+      (push (cons card-name (anki-mode--vector-to-list fields))
+            anki-mode--card-types))))
+
 
 
 

@@ -35,7 +35,6 @@ Call `anki-mode-menu` to begin. Note that Anki must be running in order to use
 
 ### TODO
 
-* Currently the card types are hard coded so only the default ones can be used.
 * Updating existing cards would be useful.
 * Currently LaTeX can only be compiled within Anki itself (by previewing the card).
 

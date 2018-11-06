@@ -45,6 +45,30 @@
     (should (equal anki-mode--decks '("foo" "bar")))))
 
 
+(ert-deftest test-update-card-types ()
+  (with-mock
+    (mock (anki-mode-connect 'anki-mode--update-card-types-cb-1 "modelNames" nil *))
+    (anki-mode-update-card-types))
+
+  (with-mock
+    (mock (anki-mode-connect * "modelFieldNames" '(("modelName" . "Basic")) *))
+    (anki-mode--update-card-types-cb-1 '["Basic"]))
+
+  (let ((anki-mode--card-types '()))
+    (anki-mode--update-card-types-cb-2 "Basic" '["Front" "Back"])
+    (should (equal anki-mode--card-types '(("Basic" . ("Front" "Back")))))
+
+    (anki-mode--update-card-types-cb-2 "Geography - Country Maps" '["Name", "Croatian name", "Capital", "Flag", "Map"])
+    (should (equal anki-mode--card-types
+                   '(("Geography - Country Maps" . ("Name", "Croatian name", "Capital", "Flag", "Map"))
+                     ("Basic" . ("Front" "Back")))))
+
+    (anki-mode--update-card-types-cb-2 "Basic" '["Front2" "Back2"])
+    (should (equal anki-mode--card-types
+                   '(("Geography - Country Maps" . ("Name", "Croatian name", "Capital", "Flag", "Map"))
+                     ("Basic" . ("Front2" "Back2")))))))
+
+
 (ert-deftest test-create-card ()
   ;; See impl for why a hash table
   (let ((expected (make-hash-table)))
