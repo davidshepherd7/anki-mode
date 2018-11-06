@@ -154,6 +154,8 @@ Use pandoc by default because it can do sensible things with underscores in LaTe
                                             (anki-mode-menu-render)))
 (define-key anki-mode-menu-mode-map (kbd "a") (lambda ()
                                             (interactive)
+                                            (when (not (and anki-mode--previous-deck anki-mode--previous-card-type))
+                                              (error "Can't reuse the previous options because no previous deck/card type is set"))
                                             (anki-mode-new-card-noninteractive
                                              anki-mode--previous-deck
                                              anki-mode--previous-card-type)))
