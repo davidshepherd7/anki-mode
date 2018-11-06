@@ -54,6 +54,9 @@
 (defvar anki-mode--card-type nil
   "Buffer local variable containing the current card type.")
 
+(defvar anki-mode--log-requests nil
+  "If non-nil anki-mode will log all http requests and responses.")
+
 (defconst anki-mode--field-start-regex "^\\s-*@")
 
 
@@ -197,7 +200,8 @@ When done CALLBACK will be called."
                    (-concat it (if params (list (cons "params" params)) (list)))
                    (json-encode it)
                    (encode-coding-string it 'utf-8))))
-    (message "Anki connect sending %S" data)
+    (when anki-mode--log-requests
+      (message "Anki connect sending %S" data))
     (request "http://localhost:8765"
              :type "POST"
              :data data
@@ -211,11 +215,11 @@ When done CALLBACK will be called."
 (defun anki-mode--http-success-factory (callback)
   (function*
    (lambda (&key data &allow-other-keys)
-     (message "Anki connect recv %S" data)
+     (when anki-mode--log-requests
+       (message "Anki connect recv %S" data))
      (when (not data)
        (message "Warning: anki-mode-connect got null data, this probably means a bad query was sent"))
 
-     ;; (message "Got anki data %S" data)
      (let ((the-error (cdr (assoc 'error data)))
            (the-result (cdr (assoc 'result data))))
        (when the-error
