@@ -61,11 +61,16 @@
 
 
 
+(defgroup anki nil
+  "Customisation options for interacting with Anki, a spaced repetition flashcard program."
+  :group 'external
+  :prefix "anki-mode-")
+
 (defcustom anki-mode-markdown-command "pandoc --from markdown_github --to html"
   "Markdown command to run to convert markdown to html.
 
 Use pandoc by default because it can do sensible things with underscores in LaTeX."
-  :group 'anki-mode
+  :group 'anki
   :type 'string)
 
 
