@@ -26,7 +26,7 @@
 (require 'json)
 
 (eval-when-compile
-  (require 'cl))
+  (require 'cl-lib))
 
 ;; (setq request-log-level 'debug)
 ;; (setq request-message-level 'debug)
@@ -211,7 +211,7 @@ When done CALLBACK will be called."
              :parser 'json-read
              :sync sync
              :success (anki-mode--http-success-factory callback)
-             :error  (function*
+             :error  (cl-function
                       (lambda (&key error-thrown &allow-other-keys)
                         (message "Anki mode http request failed, is anki running and is the anki-connect extension installed?\nrequest.el error was: %S, request.el normally uses the curl backend so check the curl manual for the meaning of exit codes."
                                  error-thrown)
@@ -220,7 +220,7 @@ When done CALLBACK will be called."
                         )))))
 
 (defun anki-mode--http-success-factory (callback)
-  (function*
+  (cl-function
    (lambda (&key data &allow-other-keys)
      (when anki-mode--log-requests
        (message "Anki connect recv %S" data))
