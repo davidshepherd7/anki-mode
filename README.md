@@ -60,6 +60,8 @@ You can use markdown inside fields.
 
 ## See also
 
+If you prefer org-mode to markdown, you might prefer to use [anki-editor](https://github.com/louietan/anki-editor).
+
 [org-drill](https://orgmode.org/worg/org-contrib/org-drill.html) and
 [pamparam](https://github.com/abo-abo/pamparam) are implementations of an entire
 spaced repetition system within Emacs. You might prefer one of these if you want
