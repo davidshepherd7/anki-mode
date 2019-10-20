@@ -77,6 +77,7 @@ the Anki mobile app.
 * Cycle through card fields
 * Various minor quality improvements
 * Handling of non-default card types
+* Add an error message when card already exists
 
 ### 0.1
 

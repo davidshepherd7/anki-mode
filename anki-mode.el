@@ -315,8 +315,12 @@ When done CALLBACK will be called."
                        (fields . ,md-fields))) hash-table)
     (anki-mode-connect #'anki-mode--create-card-cb "addNotes" hash-table t)))
 (defun anki-mode--create-card-cb (ret)
-  (message "Created card, got back %S" ret)
-  (anki-mode-menu))
+  ;; We can't emit errors from here because it runs async, so a message is the
+  ;; best we can do
+  (if (equal (format "%S" ret) "[nil]")
+      (message "Card creation returned a null card id, normally this means that the card already exists")
+    (message "Created card, got back %S" ret)
+    (anki-mode-menu)))
 
 (defun anki-mode--parse-fields (string)
   (--> string
