@@ -33,7 +33,7 @@
 
 
 
-(defvar anki-mode--required-anki-connect-version 5
+(defvar anki-mode--required-anki-connect-version 6
   "Version of the anki connect plugin required.")
 
 (defvar anki-mode--decks '()
@@ -312,8 +312,12 @@ When done CALLBACK will be called."
         (hash-table (make-hash-table)))
     (puthash 'notes `(((deckName . ,deck)
                        (modelName . ,model)
+                       (tags . [])
+                       ;; Can't unquote to use json-false in #s, so just use the literal keyword
+                       (options . #s(hash-table data (allowDuplicate :json-false)))
                        (fields . ,md-fields))) hash-table)
     (anki-mode-connect #'anki-mode--create-card-cb "addNotes" hash-table t)))
+
 (defun anki-mode--create-card-cb (ret)
   ;; We can't emit errors from here because it runs async, so a message is the
   ;; best we can do
