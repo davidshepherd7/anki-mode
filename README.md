@@ -14,7 +14,7 @@ A major mode for creating [Anki](https://en.wikipedia.org/wiki/Anki_(software)) 
 ## Installation
 
 1. Install [anki-connect](https://github.com/FooSoft/anki-connect) (anki addon 2055492159) and restart Anki.
-2. Install this package (drop the `.el` file into your path and require it).
+2. Install this package (either by using melpa, or by dropping the `.el` file into your path and require-ing it).
 3. Set `anki-mode-markdown-command` to your preferred markdown parser command, or install `pandoc` to use the
    default. `pandoc` with github flavoured markdown is the default because it handles `_`
    well. To disable markdown entirely set `anki-mode-markdown-command` to `cat`.
