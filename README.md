@@ -20,6 +20,13 @@ A major mode for creating [Anki](https://en.wikipedia.org/wiki/Anki_(software)) 
    well. To disable markdown entirely set `anki-mode-markdown-command` to `cat`.
 
 
+For pandoc version 2.0 or older you'll need to modify `anki-mode-markdown-command` slightly:
+
+```
+(setq anki-mode-markdown-command "pandoc --from markdown_github --to html")
+```
+
+
 ## Usage
 
 Call `anki-mode-menu` to begin. Note that Anki must be running in order to use
@@ -78,6 +85,7 @@ the Anki mobile app.
 * Various minor quality improvements
 * Handling of non-default card types
 * Add an error message when card already exists
+* Depend on pandoc 2.0 by default
 
 ### 0.1
 
