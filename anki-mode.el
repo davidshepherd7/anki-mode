@@ -67,7 +67,7 @@
   :group 'external
   :prefix "anki-mode-")
 
-(defcustom anki-mode-markdown-command "pandoc --from markdown_github --to html"
+(defcustom anki-mode-markdown-command "pandoc --from gfm --to html"
   "Markdown command to run to convert markdown to html.
 
 Use pandoc by default because it can do sensible things with underscores in LaTeX."
